@@ -147,6 +147,11 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+/notebooks/covtype.csv
+/notebooks/rcf_classifier.pkl
+/./*
+
+
 
 # pytype static type analyzer
 .pytype/
