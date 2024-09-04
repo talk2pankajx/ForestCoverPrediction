@@ -1,1 +1,1 @@
-Forest Cover Prediction of US
+Forest Cover Type Prediction 
