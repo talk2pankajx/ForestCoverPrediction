@@ -149,6 +149,7 @@ dmypy.json
 .pyre/
 /notebooks/covtype.csv
 /notebooks/rcf_classifier.pkl
+/notebooks/*
 /./*
 
 
