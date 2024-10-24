@@ -24,8 +24,6 @@ list_of_files = [
     f"src/{package_name}/pipeline/prediction_pipeline.py",
     "app.py",
     "requirements.txt",
-    "notebooks/EDA.ipynb",
-    "notebooks/Preprocessing.ipynb"
     
 ]   
 
