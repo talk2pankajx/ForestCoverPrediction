@@ -1,14 +1,15 @@
-from src.forest.exception import CustomException
-import os,sys
+from forest_cover.utils import dump_csv_to_mongo_collection
 
-def test():
-    try:
-        s = 1/0
-    except Exception as e:
-        raise CustomException(e,sys)
-    
-if __name__ == '__main__':
-    try:
-        test()
-    except CustomException as e:
-        print(e)
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+
+if __name__=='__main__':
+    file_path = 'notebooks\covtype.csv'
+    database_name = "forest_db"
+    collection_name = "forest_cols"
+
+
+dump_csv_to_mongo_collection(database_name,collection_name,file_path)

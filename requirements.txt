@@ -1,1 +1,7 @@
 from-root
+python-dotenv
+pymongo
+pandas
+numpy
+scikit-learn
+-e .
