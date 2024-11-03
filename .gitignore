@@ -122,7 +122,6 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-.env
 .venv
 env/
 venv/
@@ -151,7 +150,7 @@ dmypy.json
 /notebooks/rcf_classifier.pkl
 /notebooks/*
 /./*
-
+/artifact/*
 
 
 # pytype static type analyzer
