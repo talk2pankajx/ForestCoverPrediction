@@ -26,7 +26,7 @@ def export_collection_as_dataframe(database_name: str, collection_name: str)->pd
         return df   
          
     except Exception as e:
-        raise ForestException
+        raise ForestException(e,sys)
 
 def read_yaml_file(file_path: str)->dict:
     try:
