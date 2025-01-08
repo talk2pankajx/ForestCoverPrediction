@@ -2,6 +2,7 @@ from dataclasses import dataclass
 import os
 import pymongo
 
+from dotenv import load_dotenv
 
 
 MONGODB_URL_ENV_KEY = "MONGO_DB_URL"

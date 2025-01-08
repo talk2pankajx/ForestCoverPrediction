@@ -3,4 +3,7 @@ pymongo
 pandas
 numpy
 scikit-learn
+scipy
+pyaml
+dill
 -e .
