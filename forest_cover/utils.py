@@ -5,6 +5,8 @@ import json
 from forest_cover.exception import ForestException
 import os, sys
 import yaml
+import dill
+import numpy as np
 
 def dump_csv_to_mongo_collection(database_name: str, collection_name: str, file_path: str) -> None:
     try:
@@ -47,3 +49,24 @@ def write_yaml_file(file_path: str, content:object)->None:
     
     except Exception as e:
         raise ForestException(e,sys)
+    
+def save_object(file_path :str, object:object)->None:
+    try:
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+        with open(file_path, 'wb') as file:
+            dill.dump(object, file)
+    except Exception as e:
+        raise ForestException(e,sys)
+    
+
+def save_numpy_array_data(file_path:str,arr:np.array):
+    try:
+        dir_path = os.path.dirname(file_path)
+        os.makedirs(dir_path, exist_ok=True)
+        with open(file_path, 'wb') as file:
+            np.save(file,arr)
+            
+    except Exception as e:
+        raise ForestException(e,sys)
+        
+        

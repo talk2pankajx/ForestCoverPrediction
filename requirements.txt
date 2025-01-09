@@ -6,4 +6,5 @@ scikit-learn
 scipy
 pyaml
 dill
+imblearn
 -e .
