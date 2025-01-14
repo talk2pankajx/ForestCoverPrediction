@@ -6,7 +6,7 @@ from forest_cover.constants import training_pipe
 
 class TrainingPipelineConfig:
     def __init__(self,timestamp=datetime.now()):
-        timestamp = timestamp.strftime('%m-%m-%Y %H-%M-%S')
+        timestamp = timestamp.strftime('%d-%m-%Y %H-%M-%S')
         self.pipeline_name = training_pipe.PIPELINE_NAME
         self.artifact_name = training_pipe.ARTIFACTS_DIR
         self.artifact_dir = os.path.join(self.artifact_name,timestamp)
@@ -51,4 +51,15 @@ class DataTransformationConfig:
             self.transformed_test_file_path:str = os.path.join(self.data_transformation_dir,training_pipe.DATA_TRANSFORMATION_TRANSFORMED_DATA_DIR,training_pipe.TEST_FILE_NAME.replace("csv","npy"))
             self.transformed_object_file_path:str = os.path.join(self.data_transformation_dir,training_pipe.DATA_TRANSFORMATION_TRANSFORMED_OBJECT_DIR,training_pipe.PREPROCESSED_OBJECT_FILE_NAME)
         except Exception as e:
-            raise ForestException(e,sys)    
+            raise ForestException(e,sys)
+class ModelTrainerConfig:
+    def __init__(self, training_pipeline_config:TrainingPipelineConfig):
+        try:
+            self.model_trainer_dir = os.path.join(training_pipeline_config.artifact_dir,training_pipe.MODEL_TRAINER_DIR_NAME)
+            self.trained_model_file_path= os.path.join(training_pipeline_config.artifact_dir,training_pipe.MODEL_TRAINER_TRAINED_MODEL_DIR,
+                                                       training_pipe.MODEL_TRAINER_TRAINED_MODEL_NAME)
+            self.expected_accuracy = training_pipe.MODEL_TRAINER_EXPECTED_SCORE
+            self.overfitting_and_underfitting_threshold = training_pipe.MODEL_TRAINER_OVER_FIITING_UNDER_FITTING_THRESHOLD
+            
+        except Exception as e:
+            raise ForestException(e,sys)

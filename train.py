@@ -1,7 +1,8 @@
 from forest_cover.components.data_ingestion import DataIngestion
 from forest_cover.components.data_validation import DataValidation
 from forest_cover.components.data_transformation import DataTransformation
-from forest_cover.entity.config_entity import DataIngestionConfig,DataValidationConfig,DataTransformationConfig
+from forest_cover.components.model_trainer import ModelTrainer
+from forest_cover.entity.config_entity import DataIngestionConfig,DataValidationConfig,DataTransformationConfig,ModelTrainerConfig
 from forest_cover.entity.config_entity import TrainingPipelineConfig
 from forest_cover.logging import logging
 from forest_cover.exception import ForestException
@@ -29,6 +30,13 @@ if __name__ == '__main__':
         data_transformation = DataTransformation(data_validation_artifact,data_transformation_config)
         data_transformation_artifact = data_transformation.initiate_data_transformation()
         logging.info("Data Transformation completed")
+        
+        logging.info("Model Training and Evaluation Started")
+        model_trainer_config = ModelTrainerConfig(training_pipeline_config=training_pipeline_config)
+        model_trainer = ModelTrainer(model_trainer_config,data_transformation_artifact)
+        model_trainer_artifact = model_trainer.initiate_model_training()
+        logging.info("Model Training and Evaluation Completed")
+        
         
         
     except Exception as e:

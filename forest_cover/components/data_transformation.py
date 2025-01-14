@@ -5,12 +5,14 @@ from forest_cover.exception import ForestException
 from forest_cover.logging import logging
 import pandas as pd
 import numpy as np
+from forest_cover.constants.training_pipe import TARGET_COLUMN_NAME
 
 from imblearn.combine import SMOTEENN
 from sklearn.preprocessing import RobustScaler
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import LabelEncoder
 
 from forest_cover.constants import *
 from forest_cover.utils import *
@@ -36,12 +38,14 @@ class DataTransformation:
             preprocessor  = self.get_data_transformer_object()
             train_df = DataTransformation.read_data(self.data_validation_artifact.valid_train_file_path)
             test_df = DataTransformation.read_data(self.data_validation_artifact.valid_test_file_path)
-            input_feature_train_df = train_df.drop(columns=[training_pipe.TARGET_COLUMN_NAME],axis=1)
-            target_feature_train_df =train_df[training_pipe.TARGET_COLUMN_NAME]
+            input_feature_train_df = train_df.drop(columns=[TARGET_COLUMN_NAME],axis=1)
+            target_feature_train_df =train_df[TARGET_COLUMN_NAME]
+    
+            
             logging.info("Got the input and target features from the training data")
             
-            input_feature_test_df = test_df.drop(columns=[training_pipe.TARGET_COLUMN_NAME],axis=1)
-            target_feature_test_df =test_df[training_pipe.TARGET_COLUMN_NAME]
+            input_feature_test_df = test_df.drop(columns=[TARGET_COLUMN_NAME],axis=1)
+            target_feature_test_df =test_df[TARGET_COLUMN_NAME]
             logging.info("Got the input and target features from the test data")
             
             input_feature_train_array = preprocessor.fit_transform(input_feature_train_df)
