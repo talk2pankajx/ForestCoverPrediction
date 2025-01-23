@@ -7,8 +7,13 @@ scipy
 pyaml
 dill
 imblearn
-lightgbm
-catboost
 mlflow
 dagshub
+fastapi
+uvicorn
+jinja2
+boto3
+botocore-stubs
+mypy-boto3-s3
+neuro-mf
 -e .

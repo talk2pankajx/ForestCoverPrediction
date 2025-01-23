@@ -5,9 +5,9 @@ import sys
 
 def classification_score(y_true,y_pred):
     try:
-        model_f1_score = f1_score(y_true,y_pred,average='weighted')
-        model_precision_score = precision_score(y_true,y_pred,average='weighted')
-        model_recall_score = recall_score(y_true,y_pred,average='weighted')
+        model_f1_score = f1_score(y_true,y_pred,average='micro')
+        model_precision_score = precision_score(y_true,y_pred,average='micro')
+        model_recall_score = recall_score(y_true,y_pred,average='micro')
         classification_metrics = ClassificationMetrics(f1_score=model_f1_score, precision_score=model_precision_score, recall_score=model_recall_score)
         return classification_metrics
     except Exception as e:

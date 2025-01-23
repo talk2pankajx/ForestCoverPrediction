@@ -10,6 +10,7 @@ class TrainingPipelineConfig:
         self.pipeline_name = training_pipe.PIPELINE_NAME
         self.artifact_name = training_pipe.ARTIFACTS_DIR
         self.artifact_dir = os.path.join(self.artifact_name,timestamp)
+        self.model_dir = os.path.join("model_final")
         self.timestamp :str = timestamp
 
 class DataIngestionConfig:
@@ -59,7 +60,11 @@ class ModelTrainerConfig:
             self.trained_model_file_path= os.path.join(training_pipeline_config.artifact_dir,training_pipe.MODEL_TRAINER_TRAINED_MODEL_DIR,
                                                        training_pipe.MODEL_TRAINER_TRAINED_MODEL_NAME)
             self.expected_accuracy = training_pipe.MODEL_TRAINER_EXPECTED_SCORE
-            self.overfitting_and_underfitting_threshold = training_pipe.MODEL_TRAINER_OVER_FIITING_UNDER_FITTING_THRESHOLD
+            self.model_trainer_config_file_path = os.path.join(training_pipe.MODEL_TRAINER_CONFIG_FILE_PATH)
             
         except Exception as e:
             raise ForestException(e,sys)
+        
+# class ModelPusherConfig:
+#     def __init__(self, training_pipeline_config:TrainingPipelineConfig):
+        

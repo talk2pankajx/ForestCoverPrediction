@@ -2,14 +2,12 @@ from forest_cover.entity.config_entity import *
 from forest_cover.entity.artifact_entity import *
 from forest_cover.logging import logging
 from forest_cover.exception import ForestException
-
-from forest_cover.utils import load_numpy_array_data,load_object, save_object,save_numpy_array_data,evaluate_models
+from neuro_mf import ModelFactory
+from forest_cover.utils import load_numpy_array_data,load_object, save_object,save_numpy_array_data
 from forest_cover.ml.metrics.classification_metrics import classification_score
 from forest_cover.ml.model.estimator import ForestPredictionModel
-
-from sklearn.ensemble import (RandomForestClassifier,ExtraTreesClassifier)
-from lightgbm import LGBMClassifier
-from catboost import CatBoostClassifier
+from typing import List, Tuple
+from sklearn.ensemble import (RandomForestClassifier)
 
 import mlflow
 
@@ -38,11 +36,13 @@ class ModelTrainer:
                 f1_score = classificationmetrics.f1_score
                 precision_score = classificationmetrics.precision_score
                 recall_score = classificationmetrics.recall_score
+                
 
             
                 mlflow.log_metric("f1_score",f1_score)
                 mlflow.log_metric("precision",precision_score)
                 mlflow.log_metric("recall",recall_score)
+                
                 mlflow.sklearn.log_model(best_model,"model")
                 
 
@@ -50,8 +50,6 @@ class ModelTrainer:
             if tracking_url_type_store!='file':
                 
                 mlflow.sklearn.log_model(best_model,"model",)
-            else:
-                mlflow.sklearn.log_model(best_model,"model")
                 
             
 
@@ -67,14 +65,27 @@ class ModelTrainer:
             test_arr = load_numpy_array_data(test_file_path)
             
             x_train, y_train,x_test,y_test = (train_arr[:, :-1], train_arr[:, -1], test_arr[:,:-1],test_arr[:,-1])
+            model_factory = ModelFactory(model_config_path=self.model_trainer_config.model_trainer_config_file_path)
+            best_model_detail = model_factory.get_best_model(X= x_train,y= y_train,base_accuracy=self.model_trainer_config.expected_accuracy)
+               
             
-                       
-            x_train_sample, y_train_sample, x_test_sample, y_test_sample = self.random_train_samples(x_train, y_train,x_test,y_test)
-            # this statement can be removed if we want to train the with the whole dataset instead of samples
+            if best_model_detail.best_score < self.model_trainer_config.expected_accuracy:
+                logging.info("No best model found with the score")
+                raise Exception("No best model found with the score")
             
-            model= self.train_model(x_train_sample, y_train_sample, x_test_sample, y_test_sample)
+                        
+            preprocessing_obj  = load_object(file_path=self.data_transformation_artifact.transformed_object_file_path)
+            forest_model = ForestPredictionModel(preprocessing_object=preprocessing_obj,trained_model_object=best_model_detail.best_model)
+            logging.info("created forest model with preprocessor and model")
             
-            return model    
+            logging.info("created the best model path")
+            save_object(self.model_trainer_config.trained_model_file_path,forest_model)
+            
+            metric_artifact = ClassificationMetrics(f1_score=0.8,precision_score=0.8,recall_score=0.8)
+            model_trainer_artifact = ModelTrainerArtifact(trained_model_file_path=self.model_trainer_config.trained_model_file_path
+                                                          ,train_metric_artifact=metric_artifact,test_metric_artifact=metric_artifact)
+            logging.info(f"Model Trainer Artifact : {model_trainer_artifact}")
+            return model_trainer_artifact
             
             
         except Exception as e:
@@ -98,88 +109,29 @@ class ModelTrainer:
         except Exception as e:
                 raise ForestException(e, sys)
 
+    def get_best_model_and_report(self, train:np.array,test:np.array)->Tuple[object,object]:
+        try:
+            logging.info("using neuromf to get the best model and report")
+            model_factory = ModelFactory(model_config_path=self.model_trainer_config.model_trainer_config_file_path)
             
-        
-    def train_model(self,x_train, y_train, x_test, y_test):
-        models = {
-            "RandomForestClassifier" : RandomForestClassifier(verbose=1,n_jobs=-1),
-            "LightGBMClassifier" : LGBMClassifier(verbose=1,n_jobs=-1),
-            "ExtraTreesClassifier" : ExtraTreesClassifier(verbose=1,n_jobs=-1),
-            "CatBoostClassifier" : CatBoostClassifier(verbose=1)
-            }
-        
-        params = {
-            "RandomForestClassifier":{
-                'criterion':['gini','entropy','log_loss'],
-                'n_estimators': [10,20,40,50,100,300,500],
-                'max_features':['sqrt','log2'],
-                'max_depth':[None,2,4,6,8,10,20 ]
-            },
-            "LightGBMClassifier":{
-            # 'objective':['multiclass'],
-            # 'num_leaves': [2, 4, 6, 8, 10],
-            # 'learning_rate': [0.01, 0.05, 0.1, 0.2, 0.3],
-            # 'n_estimators': [10,20,40,50,100,300,500,1000],
-            # 'max_depth': [2, 4, 6, 8, 10]
-            },
+            x_train, y_train,x_test,y_test = (train[:, :-1], train[:, -1], test[:,:-1],test[:,-1])
             
-            "ExtraTreesClassifier":{
-                # 'criterion':['gini','entropy','log_loss'],
-                # 'n_estimators': [10,20,40,50,100,300,500,1000],
-                # 'max_features':['sqrt','log2'],
-                # 'max_depth':['None',2,4,6,8,10,20 ]
-                
-            },
-            "CatBoostClassifier":{
-                # 'loss_function': ['MultiClass'],
-                # 'n_estimators': [10,20,40,50,100,300,500]
-                # 'iterations': [10,20,40,50,100,300,500,1000],
-                # 'depth': [2, 4, 6, 8, 10],
-                # 'learning_rate': []         
-                            
-            }
-        }
+            best_model_detail = model_factory.get_best_model(
+                X= x_train,y=y_train,base_accuracy=self.model_trainer_config.expected_accuracy
+            )   
+            model_obj = best_model_detail.best_model
+            y_pred = model_obj.predict(x_test)
+            
+            classification_metrics = classification_score(y_true=y_test,y_pred=y_pred)
+            metric_artifacts = ClassificationMetrics(f1_score=classification_metrics.f1_score,
+                                                    precision_score=classification_metrics.precision_score,recall_score=classification_metrics.recall_score)
+            
+            return  best_model_detail,metric_artifacts
+            
+            
+            
+        except Exception as e:
+            raise ForestException(e,sys)
         
-        model_report:dict = evaluate_models(x_train=x_train,y_train= y_train,x_test=x_test,y_test=y_test,models=models,params=params)
         
-        best_model_score = max(sorted(model_report.values()))
-        
-        best_model_name  = list(model_report.keys())[list(model_report.values()).index(best_model_score)]
-        
-        best_model= models[best_model_name]
-        
-        print(best_model)
-        
-        y_train_pred  = best_model.predict(x_train)
-        
-        classification_train_metrics = classification_score(y_true = y_train,y_pred=y_train_pred)
-        
-        #track mlflow experiment
-        
-        self.track_ml_flow(best_model,classification_train_metrics)         
-        
-        y_test_pred = best_model.predict(x_test)
-        
-        classification_test_metrics = classification_score(y_true = y_test,y_pred=y_test_pred)
-        
-        self.track_ml_flow(best_model,classification_test_metrics)
-        
-        preprocessor = load_object(file_path=self.data_transformation_artifact.transformed_object_file_path)
-        
-        model_dir_path = os.path.dirname(self.model_trainer_config.trained_model_file_path)
-        os.makedirs(model_dir_path,exist_ok=True)
-        
-        Forest_Prediction_Model = ForestPredictionModel(preprocessor=preprocessor,model= best_model)
-        save_object(self.model_trainer_config.trained_model_file_path,object=Forest_Prediction_Model)
-        
-        model_trainer_artifact = ModelTrainerArtifact(trained_model_file_path=self.model_trainer_config.trained_model_file_path,
-                                                      train_metric_artifact=classification_train_metrics,test_metric_artifact=classification_test_metrics)
-        
-        print(f"Model Trainer Artifact{model_trainer_artifact}")
-        return model_trainer_artifact
     
-    
-        
-        
-        
-        

@@ -25,7 +25,7 @@ class DataValidation:
             train_file_path = self.data_ingestion_artifact.train_file_path
             test_file_path = self.data_ingestion_artifact.test_file_path
             
-            train_df =DataValidation.read_data(train_file_path)
+            train_df = DataValidation.read_data(train_file_path)
             test_df = DataValidation.read_data(test_file_path)
             
             ## validate number of columns
@@ -49,6 +49,7 @@ class DataValidation:
             test_df.to_csv(
                 self.data_validation_config.valid_test_file_path,header=True,index=False
             )
+            
             
             data_validation_artifact = DataValidationArtifact(
                 validation_status=status,

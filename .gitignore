@@ -50,6 +50,7 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+catboost_info/*
 
 # Translations
 *.mo
@@ -151,6 +152,7 @@ dmypy.json
 /notebooks/*
 /./*
 /artifact/*
+/model_final/*
 
 
 # pytype static type analyzer
