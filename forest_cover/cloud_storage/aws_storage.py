@@ -100,7 +100,7 @@ class SimpleStorageService:
             )
             model_file = func()
             file_object = self.get_file_object(model_file, bucket_name)
-            model_obj = self.read_object(file_object, decode=False)
+            model_obj = SimpleStorageService.read_object(file_object, decode=False)
             model = pickle.loads(model_obj)
             logging.info("exited the load model method of S3operation class")
             return model
@@ -186,6 +186,29 @@ class SimpleStorageService:
         except Exception as e:
             raise ForestException(e, sys)
         
+    def upload_df_as_csv(self,data_frame: DataFrame,local_filename: str, bucket_filename: str,bucket_name: str,) -> None:
+        """
+        Method Name :   upload_df_as_csv
+        Description :   This method uploads the dataframe to bucket_filename csv file in bucket_name bucket
+
+        Output      :   Folder is created in s3 bucket
+        On Failure  :   Write an exception log and then raise an exception
+
+        Version     :   1.2
+        Revisions   :   moved setup to cloud
+        """
+        logging.info("Entered the upload_df_as_csv method of S3Operations class")
+
+        try:
+            data_frame.to_csv(local_filename, index=None, header=True)
+
+            self.upload_file(local_filename, bucket_filename, bucket_name)
+
+            logging.info("Exited the upload_df_as_csv method of S3Operations class")
+
+        except Exception as e:
+            raise ForestException(e, sys) from e
+        
     def get_df_from_object(self, object_: object) -> DataFrame:
         """
         Method Name :   get_df_from_object
@@ -200,7 +223,7 @@ class SimpleStorageService:
         logging.info("Entered the get_df_from_object method of S3Operations class")
 
         try:
-            content = self.read_object(object_, make_readable=True)
+            content = SimpleStorageService.read_object(object_, make_readable=True)
             df = read_csv(content, na_values="na")
             logging.info("Exited the get_df_from_object method of S3Operations class")
             return df
