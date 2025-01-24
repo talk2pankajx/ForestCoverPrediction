@@ -14,7 +14,7 @@ from forest_cover.exception import ForestException
 from forest_cover.logging import logging
 import sys
 
-from forest_cover.cloud_storage.s3_syncer import S3sync
+from forest_cover.cloud_storage.aws_storage import S3sync
 
 from forest_cover.constants.training_pipe import *
 
