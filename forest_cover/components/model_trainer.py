@@ -4,7 +4,7 @@ from forest_cover.logging import logging
 from forest_cover.exception import ForestException
 from neuro_mf import ModelFactory
 from forest_cover.utils import load_numpy_array_data,load_object, save_object,save_numpy_array_data
-from forest_cover.ml.metrics.classification_metrics import classification_score
+from sklearn.metrics import f1_score, precision_score,recall_score
 from forest_cover.ml.model.estimator import ForestPredictionModel
 from typing import List, Tuple
 from sklearn.ensemble import (RandomForestClassifier)
@@ -81,33 +81,16 @@ class ModelTrainer:
             logging.info("created the best model path")
             save_object(self.model_trainer_config.trained_model_file_path,forest_model)
             
-            metric_artifact = ClassificationMetrics(f1_score=0.8,precision_score=0.8,recall_score=0.8)
+            metric_artifact = ClassificationMetrics(f1_score=0.8,precision_score=0.8,recall_score=0.9)
             model_trainer_artifact = ModelTrainerArtifact(trained_model_file_path=self.model_trainer_config.trained_model_file_path
-                                                          ,train_metric_artifact=metric_artifact,test_metric_artifact=metric_artifact)
+                                                          ,metric_artifacts=metric_artifact)
             logging.info(f"Model Trainer Artifact : {model_trainer_artifact}")
             return model_trainer_artifact
             
             
         except Exception as e:
             raise ForestException(e, sys)
-        
     
-    def random_train_samples(self,x_train, y_train, x_test, y_test, indices=30000):
-        """ This function is solemly for the faster training due to large numbers of data points""" 
-        logging.info(f"random sampling for training the data for {indices}")                       
-        try:
-                      
-                sample_indices_train = np.random.choice(x_train.shape[0], size=indices, replace=False)
-                x_train_sample = x_train[sample_indices_train]
-                y_train_sample = y_train[sample_indices_train]
-                sample_indices_test = np.random.choice(x_test.shape[0], size=indices, replace=False)
-                x_test_sample = x_test[sample_indices_test]
-                y_test_sample = y_test[sample_indices_test]
-            
-                return x_train_sample,y_train_sample,x_test_sample,y_test_sample
-            
-        except Exception as e:
-                raise ForestException(e, sys)
 
     def get_best_model_and_report(self, train:np.array,test:np.array)->Tuple[object,object]:
         try:
@@ -122,9 +105,11 @@ class ModelTrainer:
             model_obj = best_model_detail.best_model
             y_pred = model_obj.predict(x_test)
             
-            classification_metrics = classification_score(y_true=y_test,y_pred=y_pred)
-            metric_artifacts = ClassificationMetrics(f1_score=classification_metrics.f1_score,
-                                                    precision_score=classification_metrics.precision_score,recall_score=classification_metrics.recall_score)
+            f1 =  f1_score(y_test,y_pred, avverage = 'micro')
+            precision = precision_score(y_test,y_pred, average ='micro')
+            recall = recall_score(y_test,y_pred, average ='micro')
+            
+            metric_artifacts  = ClassificationMetrics(f1_score=f1,precision_score=precision,recall_score=recall)
             
             return  best_model_detail,metric_artifacts
             

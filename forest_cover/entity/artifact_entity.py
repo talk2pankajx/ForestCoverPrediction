@@ -30,6 +30,11 @@ class ClassificationMetrics:
 @dataclass
 class ModelTrainerArtifact:
     trained_model_file_path:str
-    train_metric_artifact : ClassificationMetrics
-    test_metric_artifact: ClassificationMetrics
-    
+    metric_artifacts : ClassificationMetrics
+
+@dataclass
+class ModelEvaluationArtifact:
+    is_model_accepted : bool
+    changed_accuracy:float
+    best_model_path: str
+    trained_model_path :str

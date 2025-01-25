@@ -52,8 +52,14 @@ MODEL_FILE_NAME = "model.pkl"
 MODEL_TRAINER_CONFIG_FILE_PATH : str = os.path.join("data_schema","model.yaml")
 
 
+## constants related to Model Evaluation var name
 
-TRAINING_BUCKET_NAME = "forestcoverbucket2"
+MODEL_EVALUATION_CHANGED_THRESHOLD :float = 0.02
+MODEL_PUSHER_BUCKET_NAME = 'forestcoverbucket2'
+MODEL_PUSHER_S3_KEY = 'model_registry'
+
+
+
 
 
 

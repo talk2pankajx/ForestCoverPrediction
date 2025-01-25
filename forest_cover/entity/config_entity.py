@@ -65,6 +65,12 @@ class ModelTrainerConfig:
         except Exception as e:
             raise ForestException(e,sys)
         
-# class ModelPusherConfig:
-#     def __init__(self, training_pipeline_config:TrainingPipelineConfig):
+class ModelEvaluationConfig:
+    def __init__(self, training_pipeline_config:TrainingPipelineConfig):
+        try:
+            self.changed_threshold_score : float = training_pipe.MODEL_EVALUATION_CHANGED_THRESHOLD
+            self.bucket_name : str = training_pipe.MODEL_PUSHER_BUCKET_NAME
+            self.s3_model_key_path : str = os.path.join(training_pipeline_config.artifact_dir,training_pipe.MODEL_PUSHER_S3_KEY,training_pipe.MODEL_FILE_NAME)
+        except Exception as e:
+            raise ForestException(e,sys)
         
