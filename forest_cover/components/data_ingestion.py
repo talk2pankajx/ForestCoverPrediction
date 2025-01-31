@@ -2,11 +2,18 @@ from forest_cover.exception import ForestException
 from forest_cover.logging import logging
 from forest_cover.entity.artifact_entity import DataIngestionArtifact
 from forest_cover.entity.config_entity import DataIngestionConfig
-from forest_cover.utils import export_collection_as_dataframe
 from forest_cover.utils import read_yaml_file
 import os,sys
 import pandas as pd
+import numpy as np
 from sklearn.model_selection import train_test_split
+
+import pymongo
+
+from dotenv import load_dotenv
+load_dotenv()
+
+MONGO_DB_URL = os.getenv("MONGO_DB_URL")
 
 class DataIngestion():
     
@@ -21,9 +28,7 @@ class DataIngestion():
     def initiate_data_ingestion(self)->DataIngestionArtifact:
         try:
             logging.info("Exporting collection as dataframe")  
-            df = export_collection_as_dataframe(
-                database_name = self.data_ingestion_config.database_name,
-                collection_name=self.data_ingestion_config.collection_name)
+            df = self.export_collection_as_dataframe()
             self.export_data_into_feature_store(df)
             self.split_data_into_train_and_test(df)         
             
@@ -68,6 +73,23 @@ class DataIngestion():
         except Exception as e:
             raise ForestException(e,sys)
     
+    def export_collection_as_dataframe(self):
+        try:
+            database_name = self.data_ingestion_config.database_name
+            collection_name = self.data_ingestion_config.collection_name
+            self.mongo_client = pymongo.MongoClient(MONGO_DB_URL)
+            collection =self.mongo_client[database_name][collection_name]
+            df = pd.DataFrame(list(collection.find()))
+            if "_id" in df.columns.to_list():
+                df.drop(columns=['_id'], axis=1, inplace=True)
+            
+            df.replace({"na":np.nan}, inplace=True)
+            return df
+                
+            
+        except Exception as e:
+            raise ForestException(e,sys)
+        
     
 
 

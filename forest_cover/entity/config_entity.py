@@ -2,7 +2,9 @@ import os, sys
 from datetime import datetime
 from forest_cover.exception import ForestException
 from forest_cover.constants import training_pipe
+from forest_cover.constants.training_pipe.s3_bucket import PREDICTION_BUCKET_NAME,TRAINING_BUCKET_NAME
 
+from dataclasses import dataclass
 
 class TrainingPipelineConfig:
     def __init__(self,timestamp=datetime.now()):
@@ -10,7 +12,6 @@ class TrainingPipelineConfig:
         self.pipeline_name = training_pipe.PIPELINE_NAME
         self.artifact_name = training_pipe.ARTIFACTS_DIR
         self.artifact_dir = os.path.join(self.artifact_name,timestamp)
-        self.model_dir = os.path.join("model_final")
         self.timestamp :str = timestamp
 
 class DataIngestionConfig:
@@ -73,4 +74,24 @@ class ModelEvaluationConfig:
             self.s3_model_key_path : str = os.path.join(training_pipeline_config.artifact_dir,training_pipe.MODEL_PUSHER_S3_KEY,training_pipe.MODEL_FILE_NAME)
         except Exception as e:
             raise ForestException(e,sys)
-        
+
+@dataclass
+class ModelPusherConfig:
+        try:
+            bucket_name : str = training_pipe.MODEL_PUSHER_BUCKET_NAME
+            s3_model_key_path : str = os.path.join(training_pipe.MODEL_PUSHER_S3_KEY,training_pipe.MODEL_FILE_NAME)
+            
+        except Exception as e:
+            raise ForestException(e,sys)
+
+@dataclass
+class PredictionPipelineConfig:
+    training_pipeline_config = TrainingPipelineConfig()
+    data_bucket_name : str = training_pipe.PREDICTION_DATA_BUCKET
+    data_file_path : str = training_pipe.PREDICTION_INPUT_FILE_NAME
+    model_file_path :str = os.path.join(training_pipe.MODEL_PUSHER_S3_KEY,training_pipe.MODEL_FILE_NAME)
+    model_bucket_name : str = training_pipe.MODEL_BUCKET_NAME
+    output_file_name : str = training_pipe.PREDICTION_OUTPUT_FILE_NAME
+    model_trainer_dir :str = os.path.join(training_pipeline_config.artifact_dir,training_pipe.ARTIFACTS_DIR,training_pipe.MODEL_TRAINER_DIR_NAME)
+    trained_model_file_path :str = os.path.join(model_trainer_dir,training_pipe.MODEL_TRAINER_TRAINED_MODEL_DIR,training_pipe.MODEL_FILE_NAME)
+    

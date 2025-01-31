@@ -13,11 +13,11 @@ from pandas import DataFrame,read_csv
 
 class SimpleStorageService:
     def __init__(self):
-        s3_client_manager = S3client()
-        self.s3_resource= s3_client_manager.s3_resource
-        self.s3_client = s3_client_manager.s3_client
+        s3_client = S3client()
+        self.s3_resource= s3_client.s3_resource
+        self.s3_client = s3_client.s3_client
         
-    def s3_key_path_available(self,bucket_name,s3_key):
+    def s3_key_path_available(self,bucket_name,s3_key)->bool:
         try:
             bucket = self.get_bucket(bucket_name)
             file_objects = [file_object for file_object in bucket.objects.filter(Prefix=s3_key)]
@@ -30,21 +30,25 @@ class SimpleStorageService:
             raise ForestException(e,sys)
     
     @staticmethod
-    def read_object(object_name: str,decode:bool=True,make_readable:bool=False)->Union[StringIO,str]:
+    def read_object(s3_object_name: str,decode:bool=True,make_readable:bool=False)->Union[StringIO,str]:
         
         logging.info("Entered the read_object method of S3operation class")
         try:
             func = (
-                lambda: object_name.get()["Body"].read().decode()
+                lambda: s3_object_name.get()["Body"].read().decode()
                 if decode is True
-                else object_name.get()["Body"].read()
+                else s3_object_name.get()["Body"].read()
                 
             )
             conv_function = lambda: StringIO(func()) if make_readable is True else func()
             logging.info("Exited the read_object method of S3operation class")
-            return conv_function
+            return conv_function()
+            
         except Exception as e:
             raise ForestException(e,sys)
+        
+        
+        
     def get_bucket(self,bucket_name:str)->Bucket:
         logging.info("Entered the get bucket method of S3operation class")
         try:
@@ -58,9 +62,9 @@ class SimpleStorageService:
         logging.info("Entered the get file object method of S3operation class")
         try:
             bucket = self.get_bucket(bucket_name)
-            file_object = [file_object for file_object in bucket.objects.filter(Prefix=filename)]
+            file_objects = [file_object for file_object in bucket.objects.filter(Prefix=filename)]
             func = lambda x: x[0] if len(x)==1 else x
-            file_objs = func(file_object)
+            file_objs = func(file_objects)
             logging.info("exited the get_file_object method of S3operation class")
             return file_objs
         except Exception as e:
@@ -100,7 +104,7 @@ class SimpleStorageService:
             )
             model_file = func()
             file_object = self.get_file_object(model_file, bucket_name)
-            model_obj = SimpleStorageService.read_object(file_object, decode=False)
+            model_obj = self.read_object(file_object, decode=False)
             model = pickle.loads(model_obj)
             logging.info("exited the load model method of S3operation class")
             return model
@@ -136,11 +140,10 @@ class SimpleStorageService:
         - If a 404 error is encountered (indicating the folder doesn't exist),
           it creates the folder by putting a zero-byte object with the folder name
           and a trailing slash.
-        - Other types of errors are silently ignored.
         """
         logging.info("Entered the create folder method of S3operation class")
         try:
-            self.s3_resource.Ob 
+            self.s3_resource.Object(bucket_name,folder_name).load()
 
         except ClientError as e:
             if e.response["Error"]["Code"] == 404:
@@ -161,18 +164,13 @@ class SimpleStorageService:
         - to_filename (str): The name of the file in the S3 bucket.
         - bucket_name (str): The name of the S3 bucket to upload the file to.
         - remove (bool, optional): If True, the local file will be deleted after uploading. Defaults to True.
-
-        Returns:
-        None
-
-        Raises:
-        ForestException: If an error occurs during the file upload process.
         """
         logging.info(F"Entered the upload file method of S3operation class")
         try:
             logging.info(f"Uploading {from_filename} file to {to_filename} file in {bucket_name} bucket")
 
             self.s3_resource.meta.client.upload_file(from_filename, bucket_name, to_filename)
+
 
             logging.info(f"Uploading {from_filename} file to {to_filename} file in {bucket_name} bucket ")
 
@@ -202,14 +200,14 @@ class SimpleStorageService:
         try:
             data_frame.to_csv(local_filename, index=None, header=True)
 
-            self.upload_file(local_filename, bucket_filename, bucket_name)
+            self.upload_file(local_filename, bucket_filename,bucket_name)
 
             logging.info("Exited the upload_df_as_csv method of S3Operations class")
 
         except Exception as e:
             raise ForestException(e, sys) from e
         
-    def get_df_from_object(self, object_: object) -> DataFrame:
+    def get_df_from_object(self, object_ : Object) -> DataFrame:
         """
         Method Name :   get_df_from_object
         Description :   This method gets the dataframe from the object_name object
@@ -223,7 +221,7 @@ class SimpleStorageService:
         logging.info("Entered the get_df_from_object method of S3Operations class")
 
         try:
-            content = SimpleStorageService.read_object(object_, make_readable=True)
+            content = self.read_object(object_, make_readable=True)
             df = read_csv(content, na_values="na")
             logging.info("Exited the get_df_from_object method of S3Operations class")
             return df

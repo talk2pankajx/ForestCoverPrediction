@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
+from forest_cover.constants.training_pipe.s3_bucket import TRAINING_BUCKET_NAME,PREDICTION_BUCKET_NAME
 
 ## common constants
 
@@ -58,6 +59,10 @@ MODEL_EVALUATION_CHANGED_THRESHOLD :float = 0.02
 MODEL_PUSHER_BUCKET_NAME = 'forestcoverbucket2'
 MODEL_PUSHER_S3_KEY = 'model_registry'
 
+PREDICTION_DATA_BUCKET =PREDICTION_BUCKET_NAME
+PREDICTION_INPUT_FILE_NAME = "test.csv"
+PREDICTION_OUTPUT_FILE_NAME = "forest_prediction.csv"
+MODEL_BUCKET_NAME = TRAINING_BUCKET_NAME
 
 
 

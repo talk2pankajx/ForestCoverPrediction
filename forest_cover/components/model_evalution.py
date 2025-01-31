@@ -9,6 +9,7 @@ from typing import Optional
 from forest_cover.entity.s3_estimator import ForestEstimator
 from forest_cover.utils import *
 from sklearn.metrics import f1_score
+from forest_cover.constants.training_pipe import TARGET_COLUMN_NAME
 
 
 @dataclass
@@ -20,11 +21,11 @@ class EvaluateModelResponse(object):
     
     
 class ModelEvaluation:
-    def __init__(self,model_evaluation_config : ModelEvaluationConfig, data_ingestion_artifact: DataIngestionArtifact,
+    def __init__(self,model_evaluation_config : ModelEvaluationConfig, data_validation_artifact: DataValidationArtifact,
                  model_trainer_artifact: ModelTrainerArtifact):
             try:
                 self.model_evaluation_config = model_evaluation_config
-                self.data_validation_artifact = data_ingestion_artifact
+                self.data_validation_artifact = data_validation_artifact
                 self.model_trainer_artifact = model_trainer_artifact
             except Exception as e:
                 raise ForestException(e,sys)
@@ -43,8 +44,10 @@ class ModelEvaluation:
     
     def evaluate_model(self)->EvaluateModelResponse:
         try:
-            test_df = pd.read_csv(self.data_validation_artifact.test_file_path)
-            X, y = test_df.drop(training_pipe.TARGET_COLUMN_NAME,axis=1),test_df[training_pipe.TARGET_COLUMN_NAME]
+            test_df = pd.read_csv(self.data_validation_artifact.valid_test_file_path)
+            if test_df.columns == 'Cover_Type':
+                X = test_df.drop(columns=[TARGET_COLUMN_NAME],axis=1, inplace=True)
+                y = test_df[TARGET_COLUMN_NAME]
             trained_model = load_object(file_path=self.model_trainer_artifact.trained_model_file_path)
             y_hat_trained_model  = trained_model.predict(X)
             

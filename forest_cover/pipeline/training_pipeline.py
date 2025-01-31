@@ -6,6 +6,9 @@ from forest_cover.components.data_transformation import DataTransformation
 
 from forest_cover.components.model_trainer import ModelTrainer
 
+from forest_cover.components.model_evalution import ModelEvaluation
+from forest_cover.components.model_pusher import ModelPusher
+
 from forest_cover.entity.config_entity import *
 from forest_cover.entity.artifact_entity import *
 
@@ -13,8 +16,6 @@ from forest_cover.exception import ForestException
 
 from forest_cover.logging import logging
 import sys
-
-from forest_cover.cloud_storage.aws_storage import S3sync
 
 from forest_cover.constants.training_pipe import *
 
@@ -76,14 +77,43 @@ class TrainingPipeline:
         except Exception as e:
             raise ForestException(e,sys)
     
+    def start_model_evaluation(self,data_validation_artifact:DataValidationArtifact,
+                               model_trainer_artifact: ModelTrainerArtifact)->ModelEvaluationArtifact:
+        try:
+            model_evaluation_config = ModelEvaluationConfig(training_pipeline_config=self.training_pipeline_config)
+            logging.info("starting Model Evaluation")
+            
+            model_evaluation  = ModelEvaluation(model_evaluation_config=model_evaluation_config,
+                                                data_validation_artifact=data_validation_artifact,
+                                                 model_trainer_artifact=model_trainer_artifact)
+            model_evaluation_artifact = model_evaluation.initiate_model_evaluation()
+            logging.info("Finishing Model Evaluation")
+            return model_evaluation_artifact
+        except Exception as e:
+            raise ForestException(e,sys)
+    
+    def start_model_pusher(self,model_trainer_artifact: ModelTrainerArtifact):
+        try:
+            logging.info("starting Model Pusher")
+            model_pusher_config = ModelPusherConfig()
+            model_pusher = ModelPusher(model_trainer_artifact=model_trainer_artifact, model_pusher_config=model_pusher_config)
+            model_pusher_artifact = model_pusher.initiate_model_pusher()
+            logging.info("Finishing Model Pusher")
+            return model_pusher_artifact
+        except Exception as e:
+            raise ForestException(e,sys)
 
+    
     def run_pipeline(self):
         try:
             data_ingestion_artifact = self.start_data_ingestion()
             data_validation_artifact = self.start_data_validation(data_ingestion_artifact=data_ingestion_artifact)
             data_transformation_artifact = self.start_data_transformation(data_validation_artifact=data_validation_artifact)
-            model_traniner_artifact = self.start_model_training(data_transformation_artifact=data_transformation_artifact)          
-            return model_traniner_artifact
+            model_traniner_artifact = self.start_model_training(data_transformation_artifact=data_transformation_artifact)
+            model_evalution_artifact = self.start_model_evaluation(data_validation_artifact=data_validation_artifact,model_trainer_artifact=model_traniner_artifact)
+            model_pusher_artifact = self.start_model_pusher(model_trainer_artifact=model_traniner_artifact)
+            return model_pusher_artifact 
+            
             
             
         except Exception as e:

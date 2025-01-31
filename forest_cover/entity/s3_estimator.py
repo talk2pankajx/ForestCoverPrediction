@@ -7,6 +7,9 @@ from pandas import DataFrame
 
 class ForestEstimator:
     
+    """
+    This class is used to save and retrieve forest model in s3 bucket and to do prediction
+    """    
     def __init__(self,bucket_name,model_path):
         
         self.bucket_name = bucket_name
@@ -17,9 +20,8 @@ class ForestEstimator:
     
     def is_model_present(self,model_path):
         try:
-            return self.s3.s3_key_path_available(bucket_name=self.bucket_name, model_path=self.model_path)
-        except Exception as e:
-            raise ForestException(e,sys)
+            return self.s3.s3_key_path_available(bucket_name=self.bucket_name, s3_key=model_path)
+        except ForestException as e:
             print(e)
             return False
     
@@ -30,7 +32,7 @@ class ForestEstimator:
         except Exception as e:
             raise ForestException(e,sys)
 
-    def save_model(self,from_file,remove: bool= False):
+    def save_model(self, from_file: str,remove: bool= False):
         try:
             return self.s3.upload_file(from_file,to_filename=self.model_path,bucket_name=self.bucket_name, remove=remove)
         except Exception as e:
