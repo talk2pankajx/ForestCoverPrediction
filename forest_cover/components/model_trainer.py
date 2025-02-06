@@ -11,10 +11,6 @@ from sklearn.ensemble import (RandomForestClassifier)
 
 import mlflow
 
-import dagshub
-dagshub.init(repo_owner='talk2pankajx', repo_name='ForestCoverPrediction', mlflow=True)
-from urllib.parse import urlparse
-
 import numpy as np
 
 

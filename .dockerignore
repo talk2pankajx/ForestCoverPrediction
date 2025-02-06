@@ -1,0 +1,8 @@
+images
+env
+logs
+infrastructure
+notebooks
+forest_cover.egg-info
+artifacts
+model_final
